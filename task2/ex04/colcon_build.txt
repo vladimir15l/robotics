@@ -1,0 +1,5 @@
+Starting >>> vladimir15l
+Finished <<< vladimir15l [0.62s]
+
+Summary: 1 package finished [0.78s]
+  1 package had stderr output: vladimir15l
