@@ -14,6 +14,18 @@ class CommandActionClient(Node):
     def send_goal(self):
         goal_msg = MessageTurtleCommands.Goal()
         goal_msg.command = 'forward'
+        goal_msg.s = 4
+        goal_msg.angle = 0
+        self._action_client.wait_for_server()        
+        self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+        self._send_goal_future.add_done_callback(self.goal_response_callback)
+        goal_msg.command = 'turn_right'
+        goal_msg.s = 0
+        goal_msg.angle = 90
+        self._action_client.wait_for_server()        
+        self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+        self._send_goal_future.add_done_callback(self.goal_response_callback)
+        goal_msg.command = 'forward'
         goal_msg.s = 2
         goal_msg.angle = 0
         self._action_client.wait_for_server()        
@@ -26,7 +38,7 @@ class CommandActionClient(Node):
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
         goal_msg.command = 'forward'
-        goal_msg.s = 1
+        goal_msg.s = 8
         goal_msg.angle = 0
         self._action_client.wait_for_server()        
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
@@ -75,3 +87,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+

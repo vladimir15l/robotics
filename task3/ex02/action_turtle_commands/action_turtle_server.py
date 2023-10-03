@@ -14,23 +14,22 @@ class CommandActionServer(Node):
 
     def __init__(self):
         super().__init__('action_turtle_server')
-        self.flag = 0
         self.twist = Twist()
-        self.before_pose = Pose()
-        self.after_pose = Pose()
+        self.flag = 0
+        self.velocity = 1
         self.publisher_ = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
-        self.subscription = self.create_subscription(Pose, '/turtle1/pose', self.callback, 10)
         self._action_server = ActionServer(
             self,
             MessageTurtleCommands,
             'execute_turtle_commands',
-            self.execute_callback)
+            self.execute_callback)        
+        self.subscription = self.create_subscription(Pose, '/turtle1/pose', self.callback, 10)
         self.subscription # prevent unused variable warn
 
 
     def callback(self, msg):
         if self.flag == 1:
-            self.before_pose = msg
+            self.velocity = int(msg.linear_velocity)
             self.flag = 0
         self.after_pose = msg
         #self.get_logger().info('I heard: "%s"' % msg)
@@ -41,22 +40,25 @@ class CommandActionServer(Node):
 
         if goal_handle.request.command == 'forward':
             self.twist.linear.x = float(goal_handle.request.s)
-            self.twist.angular.z = float(goal_handle.request.angle*3.14/180)
+            self.twist.angular.z = float(goal_handle.request.angle*3.14159/180)
         elif goal_handle.request.command == 'turn_left':
             self.twist.linear.x = float(goal_handle.request.s)
-            self.twist.angular.z = float(goal_handle.request.angle*3.14/180)
+            self.twist.angular.z = float(goal_handle.request.angle*3.14159/180)
         elif goal_handle.request.command == 'turn_right':
             self.twist.linear.x = float(goal_handle.request.s)
-            self.twist.angular.z = -float(goal_handle.request.angle*3.14/180)
-        self.flag = 1
+            self.twist.angular.z = -float(goal_handle.request.angle*3.14159/180)
         self.publisher_.publish(self.twist)
         self.get_logger().info('Publishing: "%s"' % self.twist)
-        
+        self.flag = 1
         feedback_msg = MessageTurtleCommands.Feedback()
-
-        feedback_msg.odom = 1
-        self.get_logger().info('Feedback: {0}'.format(feedback_msg.odom))
-        goal_handle.publish_feedback(feedback_msg)
+        feedback_msg.odom = 0
+        time.sleep(0.1)
+        while feedback_msg.odom < goal_handle.request.s:
+            time.sleep(1/goal_handle.request.s)
+            feedback_msg.odom += 1
+            self.get_logger().info('Feedback: {0}'.format(feedback_msg.odom))
+            goal_handle.publish_feedback(feedback_msg)
+        #goal_handle.publish_feedback(feedback_msg)
         time.sleep(1)
         goal_handle.succeed()
         result = MessageTurtleCommands.Result()
@@ -74,3 +76,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
