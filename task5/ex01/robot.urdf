@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<robot name="sam_bot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="base_radius" value="0.1"/>
+  <xacro:property name="base_length" value="0.5"/>
+  <xacro:property name="axis_length" value="0.25"/>
+  <xacro:property name="axis_width" value="0.04"/>
+  <xacro:property name="wheel_width" value="0.04"/>
+  <xacro:property name="wheel_radius" value="0.07"/>
+  <xacro:property name="wheel_ygap" value="0.001"/>
+  <xacro:property name="wheel_zoff" value="0.12"/>
+  <xacro:property name="wheel_xoff" value="0.12"/>
+
+  <xacro:property name="caster_xoff" value="-0.15"/>
+
+  <!-- Robot Base -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_length}"/>
+      </geometry>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 ${pi/2} 0.0"/>
+      <material name="Cyan">
+        <color rgba="0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_length}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="20.0"/>
+      <inertia ixx="0.5" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.5"/>
+    </inertial>
+  </link>
+
+  <!-- Robot Footprint -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_footprint"/>
+    <origin xyz="0.0 0.0 ${-(wheel_radius+wheel_zoff)}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Robot Axis -->
+  <link name="axis_link">
+    <visual>
+      <geometry>
+        <box size="${axis_length} ${axis_width} ${axis_width}"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="axis_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="axis_link"/>
+    <origin xyz="0.12 0.0 ${-wheel_zoff}" rpy="0.0 0.0 ${pi/2}"/>
+  </joint>
+
+  <!-- Wheels -->
+  <xacro:macro name="wheel" params="prefix x_reflect y_reflect">
+    <link name="${prefix}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+            <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="Gray">
+          <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="${prefix}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${prefix}_link"/>
+      <origin xyz="${x_reflect*wheel_xoff} ${y_reflect*(axis_length/2+wheel_ygap)} ${-wheel_zoff}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel prefix="drivewhl_l" x_reflect="1" y_reflect="1" />
+  <xacro:wheel prefix="drivewhl_r" x_reflect="1" y_reflect="-1" />
+
+  <!-- Caster Wheel -->
+  <link name="front_caster">
+    <visual>
+      <geometry>
+        <sphere radius="${wheel_radius}"/>
+      </geometry>
+      <material name="Cyan">
+        <color rgba="0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="front_caster"/>
+    <origin xyz="${caster_xoff} 0.0 ${-(base_radius + axis_width/2)}" rpy="0 0 0"/>
+  </joint>
+
+
+</robot>
