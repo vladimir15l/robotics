@@ -1,0 +1,479 @@
+<?xml version="1.0" ?>
+<robot name='robot' xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find robot_description)/urdf/gazebo.urdf.xacro" />
+
+    <xacro:property name="base_link_length" value="0.5"/>
+    <xacro:property name="base_link_width" value="0.18"/>
+    <xacro:property name="base_link_height" value="0.04"/>
+
+    <xacro:property name="wheel_radius" value="0.05"/>
+    <xacro:property name="wheel_thickness" value="0.026"/>
+    <xacro:property name="wheel_mass" value="0.05"/>
+    <xacro:property name="wheel_offset_x" value="0.226"/>
+    <xacro:property name="wheel_offset_y" value="0.13"/>
+    <xacro:property name="wheel_offset_z" value="0.01"/>
+
+    <xacro:property name="chassis_length" value="0.286"/>
+    <xacro:property name="chassis_radius" value="0.01"/>
+    <xacro:property name="chassis_mass" value="0.01"/>
+
+    <xacro:property name="bumper_length" value="0.025"/>
+    <xacro:property name="bumper_width" value="0.246"/>
+    <xacro:property name="bumper_height" value="0.04"/>
+    <xacro:property name="bumper_mass" value="0.001"/>
+
+    <xacro:property name="motor_length" value="0.3"/>
+    <xacro:property name="motor_width" value="0.17"/>
+    <xacro:property name="motor_height" value="0.03"/>
+    <xacro:property name="motor_mass" value="0.01"/>
+
+    <xacro:property name="bonnet_length" value="0.27"/>
+    <xacro:property name="bonnet_width" value="0.23"/>
+    <xacro:property name="bonnet_height" value="0.01"/>
+    <xacro:property name="bonnet_mass" value="0.001"/>
+
+    <xacro:property name="aerodynamic_length" value="0.22"/>
+    <xacro:property name="aerodynamic_width" value="0.12"/>
+    <xacro:property name="aerodynamic_height" value="0.01"/>
+    <xacro:property name="aerodynamic_mass" value="0.0001"/>
+
+    <xacro:property name="seat_length" value="0.1"/>
+    <xacro:property name="seat_width" value="0.065"/>
+    <xacro:property name="seat_mass" value="0.001"/>
+    <xacro:property name="seat_height" value="0.01"/>
+    <xacro:property name="seat_offset_y" value="0.05"/>
+    <xacro:property name="seat_down_position_x" value="${base_link_length-motor_length + bumper_length/2 -seat_length/2}"/>
+    <xacro:property name="seat_down_position_z" value="${base_link_height + seat_height/2}"/>
+    <xacro:property name="seat_up_position_x" value="${base_link_length-motor_length + bumper_length/2 -seat_length - seat_height/2}"/>
+    <xacro:property name="seat_up_position_z" value="${base_link_height + seat_length/2}"/>
+
+    <xacro:property name="wall_length" value="0.07"/>
+    <xacro:property name="wall_width" value="0.18"/>
+    <xacro:property name="wall_height" value="0.05"/>
+    <xacro:property name="wall_mass" value="0.01"/>
+    <xacro:property name="wall_position_x" value="${seat_up_position_x - seat_height/2 - wall_length/2}"/>
+    <xacro:property name="wall_position_z" value="${base_link_height + wall_height/2}"/>
+    
+    <xacro:property name="trunk_length" value="0.12"/>
+    <xacro:property name="trunk_width" value="0.18"/>
+    <xacro:property name="trunk_height" value="0.01"/>
+    <xacro:property name="trunk_mass" value="0.001"/>
+    <xacro:property name="trunk_position_x" value="${seat_up_position_x - seat_height/2 - trunk_length/2}"/>
+    <xacro:property name="trunk_position_z" value="${base_link_height + wall_height + trunk_height/2}"/>
+
+    <xacro:property name="caster_wheel_radius" value="0.05"/>
+    <xacro:property name="caster_wheel_thickness" value="0.026"/>
+    <xacro:property name="caster_wheel_mass" value="0.01"/>
+    <xacro:property name="caster_wheel_offset_x" value="0.02"/>
+    <xacro:property name="caster_wheel_offset_z" value="${wheel_offset_z - wheel_radius + caster_wheel_radius}"/>
+    <xacro:property name="mass" value="0.01"/>
+
+    <!-- Inertias -->
+
+    <xacro:macro name="box_inertia" params="mass l w h">
+        <inertia ixx="${(1/12) * mass * (w*w+h*h)}" ixy="0.0" ixz="0.0"
+                 iyy="${(1/12) * mass * (l*l+h*h)}" iyz="0.0"
+                 izz="${(1/12) * mass * (l*l+w*w)}" />
+    </xacro:macro>
+
+    <xacro:macro name="cylinder_inertia" params="mass r l">
+        <inertia ixx="${(1/12) * mass * (3*r*r + l*l)}" ixy="0.0" ixz="0.0"
+                 iyy="${(1/12) * mass * (3*r*r + l*l)}" iyz="0.0"
+                 izz="${(1/2) * mass * (r*r)}" />
+    </xacro:macro>
+
+    <xacro:macro name="sphere_inertia" params="mass r">
+        <inertia ixx="${(2/5)*mass*r*r}" ixy="0.0" ixz="0.0"
+                 iyy="${(2/5)*mass*r*r}" iyz="0.0"
+                 izz="${(2/5)*mass*r*r}" />
+    </xacro:macro>
+
+    <!-- Materials -->
+
+    <material name="white">
+        <color rgba="1 1 1 1" />
+    </material>
+
+     <material name="orange">
+        <color rgba="1 0.3 0.1 1"/>
+    </material>
+
+    <material name="blue">
+        <color rgba="0.2 0.2 1 1"/>
+    </material>
+
+    <material name="red">
+        <color rgba="0.9 0 0 1"/>
+    </material>
+
+    <material name="dark_red">
+        <color rgba="0.3 0 0 1"/>
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <!-- Robot Base -->
+
+    <link name='base_link'>    
+    <inertial>
+        <origin xyz="${base_link_length/2} 0 ${base_link_height/2}" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <xacro:box_inertia mass="${mass}" l="${base_link_length}" w="${base_link_width}" h="${base_link_height}"/>
+    </inertial>
+    <visual>
+        <origin xyz="${base_link_length/2} 0 ${base_link_height/2}"/>
+        <geometry>
+            <box size="${base_link_length} ${base_link_width} ${base_link_height}"/>
+        </geometry>
+        <material name="dark_red"/>
+    </visual>
+    <collision>
+        <origin xyz="${base_link_length/2} 0 ${base_link_height/2}"/>
+        <geometry>
+            <box size="${base_link_length} ${base_link_width} ${base_link_height}"/>
+        </geometry>
+    </collision>
+    </link>
+
+    <gazebo reference="base_link">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <!-- Robot Wheels -->
+
+    <xacro:macro name="wheel" params="prefix reflect">
+        <joint name="${prefix}_wheel_joint" type="continuous">
+            <parent link="base_link"/>
+            <child link="${prefix}_wheel"/>
+            <origin xyz="${base_link_length*0.82} ${reflect*wheel_offset_y} 0" rpy="${-1*reflect*pi/2} 0 0" />
+            <axis xyz="0 0 ${reflect}"/>
+        </joint>
+
+        <link name="${prefix}_wheel">
+            <visual>
+                <geometry>
+                    <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <sphere radius="${wheel_radius}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <mass value="${wheel_mass}" />
+                <xacro:cylinder_inertia mass="${wheel_mass}" r="${wheel_radius}" l="${wheel_thickness}"/>
+            </inertial>
+        </link>
+
+        <gazebo reference="${prefix}_wheel">
+            <material>Gazebo/Purple</material>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:wheel prefix="left" reflect="1" />
+    <xacro:wheel prefix="right" reflect="-1" />
+
+    <!-- Caster Wheel-->
+
+     <joint name="caster_wheel_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="caster_wheel"/>
+        <origin xyz="${caster_wheel_offset_x} 0 0" rpy="0 0 0"/>
+    </joint>
+
+
+    <link name="caster_wheel">
+        <visual>
+            <geometry>
+                <sphere radius="${caster_wheel_radius}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="${caster_wheel_radius}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="${caster_wheel_mass}" />
+            <xacro:sphere_inertia mass="${caster_wheel_mass}" r="${caster_wheel_radius}"/>
+        </inertial>
+    </link>
+
+    <gazebo reference="caster_wheel">
+        <material>Gazebo/Black</material>
+        <mu1 value="0.0001"/>
+        <mu2 value="0.0001"/>
+    </gazebo>
+
+    <!-- Chassis -->
+
+    <link name="chassis">
+        <visual>
+            <origin xyz="${base_link_length*0.82} 0 0 " rpy="${pi/2} 0 0"/>
+            <geometry>
+                <cylinder radius="${chassis_radius}" length="${chassis_length}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <origin xyz="${base_link_length*0.82} 0 0 " rpy="${pi/2} 0 0"/>
+            <geometry>
+                <cylinder radius="${chassis_radius}" length="${chassis_length}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${chassis_mass}"/>
+            <xacro:cylinder_inertia mass="${chassis_mass}" r="${chassis_radius}" l="${chassis_length}"/>
+        </inertial>
+    </link>
+
+    <joint name="chassis_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="chassis"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="chassis">
+            <material>Gazebo/Black</material>
+    </gazebo>
+
+    <!-- Bumper -->
+
+    <link name="bumper">
+        <visual>
+            <origin xyz="${base_link_length} 0 ${bumper_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${bumper_length} ${bumper_width} ${bumper_height}"/>
+            </geometry>
+            <material name="dark_red"/>
+        </visual>
+        <collision>
+            <origin xyz="${base_link_length} 0 ${bumper_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${bumper_length} ${bumper_width} ${bumper_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${bumper_mass}"/>
+            <xacro:box_inertia mass="${bumper_mass}" l="${bumper_length}" w="${bumper_width}" h="${bumper_height}"/>
+        </inertial>
+    </link>
+
+    <joint name="bumper_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="bumper"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="bumper">
+            <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- motor -->
+
+    <link name="motor">
+        <visual>
+            <origin xyz="${base_link_length + bumper_length/2 - motor_length/2 - 0.01} 0 ${bumper_height + motor_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${motor_length} ${motor_width} ${motor_height}"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <origin xyz="${base_link_length + bumper_length/2 - motor_length/2 - 0.01} 0 ${bumper_height + motor_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${motor_length} ${motor_width} ${motor_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${motor_mass}"/>
+            <xacro:box_inertia mass="${motor_mass}" l="${motor_length}" w="${motor_width}" h="${motor_height}"/>
+        </inertial>
+    </link>
+
+    <joint name="motor_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="motor"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="motor">
+            <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- Bonnet -->
+
+    <link name="bonnet">
+        <visual>
+            <origin xyz="${base_link_length + bumper_length/2 - bonnet_length/2 - 0.04} 0 ${bumper_height + bonnet_height/2 + motor_height}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${bonnet_length} ${bonnet_width} ${bonnet_height}"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <origin xyz="${base_link_length + bumper_length/2 - bonnet_length/2 - 0.04} 0 ${bumper_height + bonnet_height/2 + motor_height}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${bonnet_length} ${bonnet_width} ${bonnet_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${bonnet_mass}"/>
+            <xacro:box_inertia mass="${bonnet_mass}" l="${bonnet_length}" w="${bonnet_width}" h="${bonnet_height}"/>
+        </inertial>
+    </link>
+
+    <joint name="bonnet_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="bonnet"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="bonnet">
+            <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- Aerodynamic -->
+
+    <link name="aerodynamic">
+        <visual>
+            <origin xyz="${base_link_length + bumper_length/2 - bonnet_length/2 - 0.06} 0 ${bumper_height + bonnet_height + motor_height + aerodynamic_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${aerodynamic_length} ${aerodynamic_width} ${aerodynamic_height}"/>
+            </geometry>
+            <material name="dark_red"/>
+        </visual>
+        <collision>
+            <origin xyz="${base_link_length + bumper_length/2 - bonnet_length/2 - 0.06} 0 ${bumper_height + bonnet_height + motor_height + aerodynamic_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${aerodynamic_length} ${aerodynamic_width} ${aerodynamic_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${aerodynamic_mass}"/>
+            <xacro:box_inertia mass="${aerodynamic_mass}" l="${aerodynamic_length}" w="${aerodynamic_width}" h="${aerodynamic_height}"/>
+        </inertial>
+    </link>
+
+    <joint name="aerodynamic_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="aerodynamic"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="aerodynamic">
+            <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- Robot seats -->
+
+    <xacro:macro name="seat" params="prefix reflect angle position_x position_z">
+        <joint name="${prefix}_seat_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="${prefix}_seat"/>
+            <origin xyz="${position_x} ${reflect*seat_offset_y} ${position_z}" rpy="0 ${angle} 0"/>
+        </joint>
+
+        <link name="${prefix}_seat">
+            <visual>
+                <geometry>
+                    <box size="${seat_length} ${seat_width} ${seat_height}"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="${seat_length} ${seat_width} ${seat_height}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <mass value="${seat_mass}" />
+                <xacro:box_inertia mass="${seat_mass}" l="${seat_length}" w="${seat_width}" h="${seat_height}"/>
+            </inertial>
+        </link>
+
+        <gazebo reference="${prefix}_seat">
+            <material>Gazebo/Black</material>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:seat prefix="left_down" reflect="1" angle="0" position_x="${seat_down_position_x}" position_z="${seat_down_position_z}"/>
+    <xacro:seat prefix="right_down" reflect="-1" angle="0" position_x="${seat_down_position_x}" position_z="${seat_down_position_z}"/>
+    <xacro:seat prefix="left_up" reflect="1" angle="${pi/2}" position_x="${seat_up_position_x}" position_z="${seat_up_position_z}"/>
+    <xacro:seat prefix="right_up" reflect="-1" angle="${pi/2}" position_x="${seat_up_position_x}" position_z="${seat_up_position_z}"/>
+
+    <!-- Wall -->
+
+    <link name="wall">
+        <visual>
+            <origin xyz="${wall_position_x} 0 ${wall_position_z}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${wall_length} ${wall_width} ${wall_height}"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <origin xyz="${wall_position_x} 0 ${wall_position_z}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${wall_length} ${wall_width} ${wall_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${wall_mass}"/>
+            <xacro:box_inertia mass="${wall_mass}" l="${wall_length}" w="${wall_width}" h="${wall_height}"/>
+        </inertial>
+    </link>
+
+    <joint name="wall_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="wall"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="wall">
+            <material>Gazebo/Red</material>
+    </gazebo>
+
+    <!-- Trunk -->
+
+    <link name="trunk">
+        <visual>
+            <origin xyz="${trunk_position_x} 0 ${trunk_position_z}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${trunk_length} ${trunk_width} ${trunk_height}"/>d3
+            </geometry>
+            <material name="dark_red"/>
+        </visual>
+        <collision>
+            <origin xyz="${trunk_position_x} 0 ${trunk_position_z}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${trunk_length} ${trunk_width} ${trunk_height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${trunk_mass}"/>
+            <xacro:box_inertia mass="${trunk_mass}" l="${trunk_length}" w="${trunk_width}" h="${trunk_height}"/>
+        </inertial>
+    </link>
+
+    <joint name="trunk_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="trunk"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="trunk">
+            <material>Gazebo/Red</material>
+    </gazebo>
+
+
+</robot>
