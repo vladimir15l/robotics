@@ -24,39 +24,54 @@ class PublisherSubscriber(Node):
 		super().__init__('robot_app')
 		self.publisher_ = self.create_publisher(Twist, '/robot/cmd_vel', 10)
 		self.subscription = self.create_subscription(Image, '/depth/image', self.callback, 10)
-		self.msg = Twist()
+		self.previousData = []
+		self.previousVals = []
+		self.isInited = False
 		self.subscription # prevent unused variable warn
-	        
+
+	def meanpreviousVals(self):
+		mean = 0
+		for i in self.previousVals:
+			mean += i
+		return mean / len(self.previousVals)
+		   
 	def callback(self, msg):
-		self.get_logger().info('I heard: "%s"' % msg.data[3:6])
-		allMore = True
-		self.msg.linear.x = 0.5
-		self.msg.angular.z = 0.0
-		# for i in range(len(msg.ranges)):
-		# 	if msg.ranges[i] < 0.8:
-		# 		allMore = False
-		# 		break
-		# if (allMore):
-		# 	self.msg.linear.x = 0.5
-		# 	self.msg.angular.z = 0.0
-		# else:
-		# 	self.msg.linear.x = 0.0
-		# 	self.msg.angular.z = 0.5
-		self.publisher_.publish(self.msg)
+		dsensorImage = msg
+		velMsg = Twist()
+		velMsg.linear.x = 0.5
+		self.isInited = True
+		if (len(self.previousData) < 3):
+			self.previousData.append(dsensorImage.data)
+			return
+		self.previousData.pop(0)
+		self.previousData.append(dsensorImage.data)
+		if(dsensorImage.width):
+			targetPixelMeanVal = 0
+			for im_id in range(len(self.previousData)):
+				targetPixelMeanVal += self.previousData[im_id][int(dsensorImage.width*dsensorImage.height/2+dsensorImage.width/2)]
+			targetPixelMeanVal /= len(self.previousData)
+			self.get_logger().info("%d" % targetPixelMeanVal)
+			self.previousVals.append(targetPixelMeanVal)
+			if (len(self.previousVals) > 3):
+				self.previousVals.pop(0)
+			self.get_logger().info('I heard: "%u"' % self.meanpreviousVals())
+			if(self.meanpreviousVals() != 0):
+				velMsg.linear.x = 0.0
+				self.isInited = True
+		
+		if(self.isInited):
+			self.publisher_.publish(velMsg)
 
 def main(args=None):
     rclpy.init(args=args)
-
     robot_app = PublisherSubscriber()
-
     rclpy.spin(robot_app)
-
+	
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
     robot_app.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()

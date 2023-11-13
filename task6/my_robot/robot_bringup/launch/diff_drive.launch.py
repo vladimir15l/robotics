@@ -46,7 +46,7 @@ def generate_launch_description():
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': "-r gpu_lidar_sensor.sdf"}.items(),
+        launch_arguments={'gz_args': "-r empty.sdf"}.items(),
     )
 
     # Spawn robot
@@ -55,8 +55,8 @@ def generate_launch_description():
         executable='create',
         arguments=['-name', 'robot',
                    '-topic', 'robot_description',
-                   '-x', '-4.0',
-                   '-y', '-4.0',
+                   '-x', '0.0',
+                   '-y', '0.0',
                    '-z', '0.1',
                 ],
         output='screen',
