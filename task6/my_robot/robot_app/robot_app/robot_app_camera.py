@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cv2
+import matplotlib.pyplot as plt
 import rclpy
+import numpy as np
 from rclpy.node import Node
-
+from cv_bridge import CvBridge
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
 
@@ -25,42 +28,34 @@ class PublisherSubscriber(Node):
 		self.publisher_ = self.create_publisher(Twist, '/robot/cmd_vel', 10)
 		self.subscription = self.create_subscription(Image, '/depth/image', self.callback, 10)
 		self.previousData = []
-		self.previousVals = []
-		self.isInited = False
+		self.br = CvBridge()
 		self.subscription # prevent unused variable warn
-
-	def meanpreviousVals(self):
-		mean = 0
-		for i in self.previousVals:
-			mean += i
-		return mean / len(self.previousVals)
 		   
 	def callback(self, msg):
 		dsensorImage = msg
+		current_frame = self.br.imgmsg_to_cv2(dsensorImage, "32FC1")
+		depth_array = np.array(current_frame, dtype=np.float32)
+		height, width = depth_array.shape
+		depth_array = np.where(depth_array[:] == np.inf, 50, depth_array[:])
+		cv2.imshow('camera', current_frame[100:280, 200:650])
+		cv2.waitKey(1)
 		velMsg = Twist()
 		velMsg.linear.x = 0.5
-		self.isInited = True
 		if (len(self.previousData) < 3):
-			self.previousData.append(dsensorImage.data)
+			self.previousData.append(depth_array)
 			return
 		self.previousData.pop(0)
-		self.previousData.append(dsensorImage.data)
+		self.previousData.append(depth_array)
 		if(dsensorImage.width):
 			targetPixelMeanVal = 0
 			for im_id in range(len(self.previousData)):
-				targetPixelMeanVal += self.previousData[im_id][int(dsensorImage.width*dsensorImage.height/2+dsensorImage.width/2)]
-			targetPixelMeanVal /= len(self.previousData)
-			self.get_logger().info("%d" % targetPixelMeanVal)
-			self.previousVals.append(targetPixelMeanVal)
-			if (len(self.previousVals) > 3):
-				self.previousVals.pop(0)
-			self.get_logger().info('I heard: "%u"' % self.meanpreviousVals())
-			if(self.meanpreviousVals() != 0):
+				targetPixelMeanVal += np.sum(self.previousData[im_id][100:280, 200:650])
+			targetPixelMeanVal /= len(self.previousData)*200*450
+			self.get_logger().info('Distance is: %lf' % targetPixelMeanVal)
+			if(targetPixelMeanVal < 10):
 				velMsg.linear.x = 0.0
-				self.isInited = True
-		
-		if(self.isInited):
-			self.publisher_.publish(velMsg)
+			
+		self.publisher_.publish(velMsg)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -71,6 +66,7 @@ def main(args=None):
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
     robot_app.destroy_node()
+    cv2.destroyAllWindows()
     rclpy.shutdown()
 
 if __name__ == '__main__':

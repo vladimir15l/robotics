@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'robot_app = robot_app.robot_app:main',
-            'robot_app_with_camera = robot_app.robot_app_with_camera:main',
+            'robot_app_camera = robot_app.robot_app_camera:main',
         ],
     },
 )
